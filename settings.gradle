@@ -1,0 +1,12 @@
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven { url "https://jitpack.io" }
+    }
+}
+rootProject.name = "Griffin Cashier"
+include ':app'
+include 'com.github.mazenrashed:Printooth:1.2.1'
+include 'com.squareup.picasso:picasso:2.71828'

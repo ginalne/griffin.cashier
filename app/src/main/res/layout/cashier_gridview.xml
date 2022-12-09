@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="@dimen/_5sdp">
+    <TextView
+        android:id="@+id/menu_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/black"
+        android:gravity="center_vertical|center"
+        android:text="No Name"
+        android:textStyle="bold"
+        android:textSize="@dimen/_8ssp"
+        android:letterSpacing=".1"
+        android:paddingVertical="@dimen/_3sdp"
+        android:textColor="@color/white" />
+
+    <LinearLayout
+        android:id="@+id/buttonLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:minHeight="@dimen/_10sdp"
+            android:layout_weight="1"
+            android:background="#dd4444"
+            android:orientation="vertical">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+                <ImageButton
+                    android:id="@+id/hotButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="#dd4444"
+                    android:minHeight="@dimen/_35sdp" />
+
+                <TextView
+                    android:id="@+id/hotPrice"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_horizontal|center_vertical"
+                    android:text="10K"
+                    android:textColor="@color/white"
+                    android:textSize="@dimen/_9ssp"
+                    android:textStyle="bold" />
+
+            </FrameLayout>
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:minHeight="@dimen/_10sdp"
+            android:layout_weight="1"
+            android:background="#4488dd"
+            android:orientation="vertical">
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+                <ImageButton
+                    android:id="@+id/iceButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="#4488dd"
+                    android:minHeight="@dimen/_35sdp" />
+
+                <TextView
+                    android:id="@+id/icePrice"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_horizontal|center_vertical"
+                    android:text="20K"
+                    android:textSize="@dimen/_9ssp"
+                    android:textColor="@color/white"
+                    android:textStyle="bold" />
+            </FrameLayout>
+        </RelativeLayout>
+    </LinearLayout>
+</LinearLayout>

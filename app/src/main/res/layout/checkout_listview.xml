@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/buttonLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="#eeeeee">
+        <TextView
+            android:id="@+id/name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical|left"
+            android:layout_weight="1"
+            android:text="Product Name"
+            android:textSize="@dimen/_9ssp"
+            android:letterSpacing=".1"
+            android:textColor="@color/black"
+            android:paddingHorizontal="@dimen/_5sdp"/>
+
+        <TextView
+            android:id="@+id/quantity"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:gravity="center_vertical|right"
+            android:letterSpacing=".1"
+            android:paddingVertical="@dimen/_5sdp"
+            android:text="x 10"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:textSize="@dimen/_8ssp" />
+        <TextView
+            android:id="@+id/price"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:gravity="center_vertical|right"
+            android:letterSpacing=".1"
+            android:padding="@dimen/_5sdp"
+            android:text="10K"
+            android:textColor="@color/black"
+            android:textSize="@dimen/_8ssp" />
+
+
+        <TextView
+            android:id="@+id/total"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.9"
+            android:gravity="center_vertical|right"
+            android:letterSpacing=".1"
+            android:padding="@dimen/_5sdp"
+            android:text="(100K)"
+            android:textColor="@color/black"
+            android:textSize="@dimen/_8ssp" />
+    </LinearLayout>
+
+</LinearLayout>
