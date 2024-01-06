@@ -1,6 +1,7 @@
 package com.ginalne.griffincashier;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -45,16 +46,21 @@ public class CashierAdapter extends BaseAdapter {
         TextView textIce = view.findViewById(R.id.hotPrice);
         TextView textHot = view.findViewById(R.id.icePrice);
         text.setText(products.get(i).name);
-        textIce.setText(products.get(i).products[0].getPriceShort());
-        textHot.setText(products.get(i).products[1].getPriceShort());
+//        Log.i("PRODUCT", products.toString());
+        if (products.get(i).product != null && products.get(i).product.length == 2){
+            if (products.get(i).product[0] != null)
+                textIce.setText(products.get(i).product[0].getPriceShort());
+            if (products.get(i).product[1] != null)
+                textHot.setText(products.get(i).product[1].getPriceShort());
+        }
 
         ImageButton buttonIce = view.findViewById(R.id.iceButton);
         ImageButton buttonHot = view.findViewById(R.id.hotButton);
         buttonIce.setOnClickListener(v -> {
-            checkout.addProduct(products.get(i).products[0]);
+            checkout.addProduct(products.get(i).product[1]);
         });
         buttonHot.setOnClickListener(v -> {
-            checkout.addProduct(products.get(i).products[1]);
+            checkout.addProduct(products.get(i).product[0]);
         });
 //        ImageView icon = (ImageView) view.findViewById(R.id.icon);
 //        icon.setImageResource(products[i]);

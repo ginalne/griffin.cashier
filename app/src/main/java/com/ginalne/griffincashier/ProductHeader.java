@@ -3,12 +3,12 @@ package com.ginalne.griffincashier;
 public class ProductHeader {
     public Integer id;
     public String name;
-    public Product[] products;
+    public Product[] product;
     public ProductHeader(String name, Product[] products){
         this.name = name;
-        this.products = products;
+        this.product = products;
     }
     public String toString(){
-        return "null";
+        return id + " : " + name + " ("+(product == null ? 0 : product.length)+" Product)";
     }
 }

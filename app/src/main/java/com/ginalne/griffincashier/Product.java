@@ -4,9 +4,9 @@ public class Product {
     public Integer id;
     public String name;
     public String name_19;
-    public Integer price;
+    public ProductPrice price;
 
-    public Product(Integer id, String name, String name_19, Integer price){
+    public Product(Integer id, String name, String name_19, ProductPrice price){
         this.id = id;
         this.name = name;
         this.price = price;
@@ -14,7 +14,7 @@ public class Product {
     }
 
     public String getPriceShort(){
-        return Integer.toString(price/1000) + "K";
+        return Integer.toString(price.price/1000) + "K";
     }
     public String getNameShort() {
         return name_19;

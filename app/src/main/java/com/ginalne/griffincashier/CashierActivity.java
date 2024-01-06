@@ -1,5 +1,7 @@
 package com.ginalne.griffincashier;
 
+import static android.app.ProgressDialog.show;
+
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
@@ -12,6 +14,9 @@ import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.os.Debug;
+import android.util.ArrayMap;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ImageButton;
@@ -31,12 +36,21 @@ import com.mazenrashed.printooth.utilities.PrintingCallback;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class CashierActivity extends AppCompatActivity implements PrintingCallback {
     GridView gridView;
@@ -55,58 +69,53 @@ public class CashierActivity extends AppCompatActivity implements PrintingCallba
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cashier);
         gridView = findViewById(R.id.cashierGridView);
-        Product es_kopi;
-        products.add(new ProductHeader("Kopi Susu Gula Aren", new Product[] {
-                es_kopi = new Product(1, "Es Kopi Susu Gula Aren", "Es Kopi S.G.A.", 11000),
-                new Product(2, "Kopi Susu Gula Aren", "Kopi S.G.A", 11000)
-        }));
-        products.add(new ProductHeader("Cappucino", new Product[] {
-                new Product(1, "Ice Cappucino", "Ice Cappucino", 11000),
-                new Product(2, "Hot Cappucino", "Hot Cappucino", 11000)
-        }));
-        products.add(new ProductHeader("Americano", new Product[] {
-                new Product(1, "Ice Americano", "Ice Americano", 8000),
-                new Product(2, "Hot Americano", "Hot Americano", 8000)
-        }));
-        products.add(new ProductHeader("Mochacino", new Product[] {
-                new Product(1, "Ice Mochacino", "Ice Mochacino", 12000),
-                new Product(2, "Hot Mochacino", "Hot Mochacino", 12000)
-        }));
-        products.add(new ProductHeader("Chocolate", new Product[] {
-                new Product(1, "Ice Chocolate", "Ice Chocolate", 12000),
-                new Product(2, "Hot Chocolate", "Hot Chocolate", 12000)
-        }));
-        listView = findViewById(R.id.checkoutListView);
-        TextView textTotal = findViewById(R.id.textTotal);
-        Button buttonClear = findViewById(R.id.buttonClear);
-        Button buttonUndo = findViewById(R.id.buttonUndo);
-        Button buttonDone = findViewById(R.id.buttonDone);
-        checkoutAdapter = new CheckoutAdapter(getApplicationContext(), checkouts, textTotal, buttonUndo);
+        Call<ApiResponse.ProductHeader> call = ApiClient.getRetrofitInstance().create(ApiInterface.class).productlist();
+        Toast.makeText(this, "Total Header Call", Toast.LENGTH_SHORT).show();
+        call.enqueue(new Callback<ApiResponse.ProductHeader>() {
+            @Override
+            public void onResponse(Call<ApiResponse.ProductHeader> call, Response<ApiResponse.ProductHeader> response) {
+                ApiResponse.ProductHeader productHeader = response.body();
+                products = productHeader.data;
+                listView = findViewById(R.id.checkoutListView);
+                TextView textTotal = findViewById(R.id.textTotal);
+                Button buttonClear = findViewById(R.id.buttonClear);
+                Button buttonUndo = findViewById(R.id.buttonUndo);
+                Button buttonDone = findViewById(R.id.buttonDone);
+                checkoutAdapter = new CheckoutAdapter(getApplicationContext(), checkouts, textTotal, buttonUndo);
+                listView.setAdapter(checkoutAdapter);
+                CashierAdapter cashierAdapter = new CashierAdapter(getApplicationContext(), checkoutAdapter, products);
+                gridView.setAdapter(cashierAdapter);
+                buttonClear.setOnClickListener( v -> {
+                    checkoutAdapter.clearList();
+                });
 
-        listView.setAdapter(checkoutAdapter);
+                buttonUndo.setOnClickListener( v -> {
+                    checkoutAdapter.undo();
+                });
 
-        CashierAdapter cashierAdapter = new CashierAdapter(getApplicationContext(), checkoutAdapter, products);
-        gridView.setAdapter(cashierAdapter);
+                buttonDone.setOnClickListener( v -> {
+                    showDialogPay();
+                });
+                initPrintSystem();
+                Toast.makeText(CashierActivity.this, "Total Header : " + productHeader.data.size(), Toast.LENGTH_SHORT).show();
+            }
 
-        buttonClear.setOnClickListener( v -> {
-            checkoutAdapter.clearList();
+            @Override
+            public void onFailure(Call<ApiResponse.ProductHeader> call, Throwable t) {
+                Log.e("ERROR API", t.getMessage());
+                Toast.makeText(CashierActivity.this, "Something went wrong...Please try later!", Toast.LENGTH_SHORT).show();
+            }
         });
 
-        buttonUndo.setOnClickListener( v -> {
-            checkoutAdapter.undo();
-        });
 
-        buttonDone.setOnClickListener( v -> {
-            showDialogPay();
-        });
-        initPrintSystem();
+
     }
 
     private void initPrintSystem() {
         btn_unpair_pair = findViewById(R.id.bluetoothIcon);
 
-        if (printing != null)
-            printing.setPrintingCallback(this);
+        if (this.printing != null)
+            this.printing.setPrintingCallback(this);
 
         btn_unpair_pair.setOnClickListener(view -> {
             if (Printooth.INSTANCE.hasPairedPrinter())
@@ -146,9 +155,10 @@ public class CashierActivity extends AppCompatActivity implements PrintingCallba
             changePairAndUnpair();
         }
     }
-    public void donePrinting(){
-        lastDialog.dismiss();
-        checkoutAdapter.clearAll();
+    public void donePrinting(boolean clear){
+        lastDialog.dismissAllowingStateLoss();
+        if (clear)
+            checkoutAdapter.clearAll();
     }
     private void print() {
         totalCheckout = checkoutAdapter.getTotal();
@@ -157,7 +167,7 @@ public class CashierActivity extends AppCompatActivity implements PrintingCallba
             Toast.makeText(CashierActivity.this, "Paying not Enough!", Toast.LENGTH_LONG).show();
             return;
         }
-        String filePath = "https://main.ginalne.host/logo/dimensilain";
+        String filePath = "https://main.ginalne.my.id/logo/dimensilain";
         Toast.makeText(CashierActivity.this, "Printing...", Toast.LENGTH_SHORT).show();
         // Lo(ad Image
         if (logo == null)
@@ -183,70 +193,111 @@ public class CashierActivity extends AppCompatActivity implements PrintingCallba
             printStruct(logo);
     }
     private void printStruct(Bitmap logo) {
-        ArrayList<Printable> printable = new ArrayList<>();
-        printable.add(new ImagePrintable.Builder(logo)
-                .setAlignment(DefaultPrinter.Companion.getALIGNMENT_LEFT())
-                .build());
-        printable.add(new TextPrintable.Builder()
-                .setText("Jl. Anyer No.10 Tahun 1945")
-                .setLineSpacing(DefaultPrinter.Companion.getLINE_SPACING_60())
-                .setAlignment(DefaultPrinter.Companion.getALIGNMENT_CENTER())
-                .setNewLinesAfter(1)
-                .build());
-
-        Date c = Calendar.getInstance().getTime();
-        SimpleDateFormat df = new SimpleDateFormat("dd MMM yyyy hh:ss", Locale.getDefault());
-        String formattedDate = df.format(c);
-
-        printable.add(new TextPrintable.Builder()
-                .setText(String.format("%-20s %11s", formattedDate, "####"))
-                .setNewLinesAfter(1)
-                .build()
-        );
-        printable.add(new TextPrintable.Builder()
-                .setText("-------------------------------")
-                .setAlignment(DefaultPrinter.Companion.getALIGNMENT_CENTER())
-                .setNewLinesAfter(1)
-                .build()
-        );
-        for(ProductCheckout prod : checkoutAdapter.lists){
-            printable.add(prod.getPrintBuilder());
+        ApiInterface apiInterface = (ApiInterface)ApiClient.getRetrofitInstance().create(ApiInterface.class);
+        ArrayMap<String, String> map = new ArrayMap();
+        map.put("receipt_id", "1");
+        map.put("paid", this.totalPay.toString());
+        List<ProductCheckout> list = this.checkoutAdapter.lists;
+        for (byte i = 0; i < list.size(); i++) {
+            ProductCheckout productCheckout = this.checkoutAdapter.lists.get(i);
+            map.put("product[" + i + "][product_id]", productCheckout.product.id.toString());
+            map.put("product[" + i + "][price_id]", productCheckout.product.price.id.toString());
+            map.put("product[" + i + "][quantity]", productCheckout.quantity.toString());
         }
-        printable.add(new TextPrintable.Builder()
-                .setText(String.format("%31s", "-------------------"))
-                .setNewLinesAfter(1)
-                .setAlignment(DefaultPrinter.Companion.getALIGNMENT_CENTER()).build()
-        );
-        printable.add(new TextPrintable.Builder()
-                .setText(String.format("%-5s %10s\n", "Total", "Rp." + String.format("%,d", Long.parseLong(totalCheckout.toString()))))
-                .setFontSize(DefaultPrinter.Companion.getFONT_SIZE_LARGE())
-                .setLineSpacing(DefaultPrinter.Companion.getLINE_SPACING_30())
-                .setAlignment(DefaultPrinter.Companion.getALIGNMENT_CENTER()).build()
-        );
-        printable.add(new TextPrintable.Builder()
-                .setText("(Harga sudah termasuk PPN 11%)")
-                .setAlignment(DefaultPrinter.Companion.getALIGNMENT_CENTER())
-                .setNewLinesAfter(1)
-                .build()
-        );
-        printable.add(new TextPrintable.Builder()
-                .setText(String.format("%-20s %11s\n", "Tunai", "Rp." + String.format("%,d", Long.parseLong(totalPay.toString()))))
-                .setEmphasizedMode(DefaultPrinter.Companion.getEMPHASIZED_MODE_BOLD())
-                .build()
-        );
-        printable.add(new TextPrintable.Builder()
-                .setText(String.format("%-20s %11s\n", "Kembali", "Rp." + String.format("%,d", Long.parseLong(totalChange.toString()))))
-                .setEmphasizedMode(DefaultPrinter.Companion.getEMPHASIZED_MODE_BOLD())
-                .setNewLinesAfter(1).build()
-        );
-        printable.add(new TextPrintable.Builder()
-                .setText("Terimakasih sudah membeli produk Dimensi Lain, Selamat menikmati rasa uniknya.")
-                .setAlignment(DefaultPrinter.Companion.getALIGNMENT_CENTER())
-                .setNewLinesAfter(3)
-                .build()
-        );
-        printing.print(printable);
-        donePrinting();
+        apiInterface.billAdd(map).enqueue(new Callback<ApiResponse.Bill>() {
+            @Override
+            public void onResponse(Call<ApiResponse.Bill> call, Response<ApiResponse.Bill> response) {
+                ApiResponse.Bill bill = response.body();
+                if (response.body() != null){
+                    Log.i("PRINT", response.body().toString());
+                    ArrayList<Printable> printable = new ArrayList<>();
+
+                    printable.add(new ImagePrintable.Builder(logo)
+                            .setAlignment(DefaultPrinter.Companion.getALIGNMENT_LEFT())
+                            .build());
+                    printable.add(new TextPrintable.Builder()
+                            .setText("Jl. Raya Anyer-Sirih")
+                            .setLineSpacing(DefaultPrinter.Companion.getLINE_SPACING_60())
+                            .setAlignment(DefaultPrinter.Companion.getALIGNMENT_CENTER())
+                            .setNewLinesAfter(1)
+                            .build());
+
+                    Date c = Calendar.getInstance().getTime();
+                    SimpleDateFormat df = new SimpleDateFormat("dd MMM yyyy hh:ss", Locale.getDefault());
+                    String formattedDate = df.format(c);
+
+                    printable.add(new TextPrintable.Builder()
+                            .setText(String.format("%-20s %11s", formattedDate, "####"))
+                            .setNewLinesAfter(1)
+                            .build()
+                    );
+                    printable.add(new TextPrintable.Builder()
+                            .setText("-------------------------------")
+                            .setAlignment(DefaultPrinter.Companion.getALIGNMENT_CENTER())
+                            .setNewLinesAfter(1)
+                            .build()
+                    );
+                    for(ProductCheckout prod : checkoutAdapter.lists){
+                        printable.add(prod.getPrintBuilder());
+                    }
+                    printable.add(new TextPrintable.Builder()
+                            .setText(String.format("%31s", "-------------------"))
+                            .setNewLinesAfter(1)
+                            .setAlignment(DefaultPrinter.Companion.getALIGNMENT_CENTER()).build()
+                    );
+                    printable.add(new TextPrintable.Builder()
+                            .setText(String.format("%-5s %10s\n", "Total", "Rp." + String.format("%,d", Long.parseLong(totalCheckout.toString()))))
+                            .setFontSize(DefaultPrinter.Companion.getFONT_SIZE_LARGE())
+                            .setLineSpacing(DefaultPrinter.Companion.getLINE_SPACING_30())
+                            .setAlignment(DefaultPrinter.Companion.getALIGNMENT_CENTER()).build()
+                    );
+                    printable.add(new TextPrintable.Builder()
+                            .setText("(Harga sudah termasuk PPN 11%)")
+                            .setAlignment(DefaultPrinter.Companion.getALIGNMENT_CENTER())
+                            .setNewLinesAfter(1)
+                            .build()
+                    );
+                    printable.add(new TextPrintable.Builder()
+                            .setText(String.format("%-20s %11s\n", "Tunai", "Rp." + String.format("%,d", Long.parseLong(totalPay.toString()))))
+                            .setEmphasizedMode(DefaultPrinter.Companion.getEMPHASIZED_MODE_BOLD())
+                            .build()
+                    );
+                    printable.add(new TextPrintable.Builder()
+                            .setText(String.format("%-20s %11s\n", "Kembali", "Rp." + String.format("%,d", Long.parseLong(totalChange.toString()))))
+                            .setEmphasizedMode(DefaultPrinter.Companion.getEMPHASIZED_MODE_BOLD())
+                            .setNewLinesAfter(1).build()
+                    );
+                    printable.add(new TextPrintable.Builder()
+                            .setText("Terimakasih sudah membeli produk Dimensi Lain, Selamat menikmati rasa uniknya.")
+                            .setAlignment(DefaultPrinter.Companion.getALIGNMENT_CENTER())
+                            .setNewLinesAfter(3)
+                            .build()
+                    );
+                    printing.print(printable);
+                    donePrinting(true);
+                } else {
+                    try {
+                        Log.e("PRINT", response.errorBody().string());
+                        JSONObject jsonObject = new JSONObject(response.errorBody().string());
+                        String entityId = jsonObject.getString("entity_id");
+                        String errorMessage = jsonObject.getString("message");
+                        String errorStatus = jsonObject.getString("status");
+                        Log.e("PRINT", entityId);
+                        Log.e("PRINT", errorMessage);
+                        Log.e("PRINT", errorStatus);
+                    } catch (JSONException | IOException e) {
+                        e.printStackTrace();
+                    }
+                    donePrinting(false);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse.Bill> call, Throwable t) {
+                Log.e("PRINT", t.getMessage());
+                Toast.makeText(CashierActivity.this, "Sending Bill Failed!", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void changePairAndUnpair() {
@@ -299,7 +350,7 @@ public class CashierActivity extends AppCompatActivity implements PrintingCallba
     private void initPrinting() {
         if (Printooth.INSTANCE.hasPairedPrinter())
             printing = Printooth.INSTANCE.printer();
-        if (printing != null)
-            printing.setPrintingCallback(this);
+        if (this.printing != null)
+            this.printing.setPrintingCallback(this);
     }
 }

@@ -46,7 +46,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:gravity="center_horizontal|center_vertical"
-                    android:text="10K"
+                    android:text="'???'"
                     android:textColor="@color/white"
                     android:textSize="@dimen/_9ssp"
                     android:textStyle="bold" />
@@ -76,7 +76,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:gravity="center_horizontal|center_vertical"
-                    android:text="20K"
+                    android:text="'???'"
                     android:textSize="@dimen/_9ssp"
                     android:textColor="@color/white"
                     android:textStyle="bold" />

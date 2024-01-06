@@ -21,7 +21,7 @@ public class ProductCheckout {
     }
 
     public Integer getTotal() {
-        return quantity * product.price;
+        return quantity * product.price.price;
     }
 
     public Printable getPrintBuilder() {
